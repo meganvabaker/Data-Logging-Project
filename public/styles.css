@@ -1,0 +1,12 @@
+p, h1, button {
+  font-family: "Arial", Helvetica, sans-serif;
+}
+
+div {
+  padding-right: 50px;
+  padding-left: 50px;
+}
+
+button {
+  font-size: 14px;
+}

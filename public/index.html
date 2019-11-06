@@ -1,0 +1,156 @@
+<!DOCTYPE html> <!-- html declaration -->
+<html lang="en"> <!-- declares language of webpage -->
+  <head> <!-- holds metadata-->
+    <meta charset="UTF-8" /> <!-- tells browser the character set used -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /> <!-- gives browser instructions on how to control page's dimensions and scaling -->
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" /> <!-- provides HTTP header for information of the content attribute -->
+    <link rel="stylesheet" href="styles.css"> <!-- links external css resource to this document -->
+    <link rel="shortcut icon" href="favicon.png"/> <!-- links external shortcut icon image to this document -->
+    <title>Time Tracker</title> <!-- document title in browser toolbar -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0/dist/Chart.min.js"></script> <!-- external chart.js script file -->
+  </head> <!-- end of head tag -->
+  <body> <!-- defines document body -->
+    <h1 align="center">Time Tracker</h1> <!-- header element -->
+    <div> <!-- defined section of document -->
+    <p><label for="freetime">How many hours of <span style="color: #fcba03"><b>free time</b></span> have you had today?</label> <!-- paragraph element holds information required for first slider, 'free time' is bold and gives a yellow hex value -->
+    <input type="range" id="freetime" min="0" max="24" value="12" oninput="sliderChange(this.value)"> <!-- freetime input has a minimum value of 0 and a maximum value of 24, with the beginning position of 12, when used it gives the value for sliderChange -->
+    <output id="sliderVal"> </output> <br> <!-- output number is displayed, line break -->
+     <p><label for="worktime">How many hours of <span style="color: #eb6534"><b>work</b></span> have you had today?</label> <!-- paragraph element holds information required for second slider, 'work' is bold and gives a red hex value -->
+    <input type="range" id="work" min="0" max="24" value="12" oninput="sliderChange2(this.value)"> <!-- work input has a minimum value of 0 and a maximum value of 24, with the beginning position of 12, when used it gives the value for sliderChange2 -->
+    <output id="sliderVal2"> </output> <br> <!-- output number is displayed, line break -->
+    <p><label for="unitime">How many hours of <span style="color: #37bf6b"><b>university</b></span> have you had today?</label> <!-- paragraph element holds information required for third slider, 'university' is bold and gives a green hex value -->
+    <input type="range" id="uni" min="0" max="24" value="12" oninput="sliderChange3(this.value)"> <!-- uni input has a minimum value of 0 and a maximum value of 24, with the beginning position of 12, when used it gives the value for sliderChange3 -->
+    <output id="sliderVal3"> </output> <br> <!-- output number is displayed, line break -->
+    <p><label for="sleeptime">How many hours of <span style="color: #34a8eb"><b>sleep</b></span> have you had today?</label> <!-- paragraph element holds information required for fourth slider, 'sleep' is bold and gives a blue hex value -->
+    <input type="range" id="sleep" min="0" max="24" value="12" oninput="sliderChange4(this.value)"> <!-- sleep input has a minimum value of 0 and a maximum value of 24, with the beginning position of 12, when used it gives the value for sliderChange4 -->
+    <output id="sliderVal4"> </output> <br> <!-- output number is displayed, line break -->
+    <p><button id="submit">Submit</button> <!-- defines clickable button and submits inputted data -->
+    </p> <!-- held inside paragraph element -->
+  </div> <!-- end of defined section -->
+
+    <p> <!-- paragraph element -->
+    <canvas id="chart"></canvas> <!-- canvas element draws graphics using chart.js script -->
+    </p> <!-- end of paragraph element -->
+
+    <script> //defines client-side script
+      function sliderChange(val) { //sliderChange function holds block of code
+          document.getElementById('sliderVal').innerHTML = val; //returns Element object associated with id 'sliderVal'
+      }
+
+      function sliderChange2(val) { //sliderChange2 function holds block of code
+          document.getElementById('sliderVal2').innerHTML = val; //returns Element object associated with id 'sliderVal2'
+      }
+
+      function sliderChange3(val) { //sliderChange3 function holds block of code
+          document.getElementById('sliderVal3').innerHTML = val; //returns Element object associated with id 'sliderVal3'
+      }
+
+      function sliderChange4(val) { //sliderChange4 function holds block of code
+          document.getElementById('sliderVal4').innerHTML = val; //returns Element object associated with id 'sliderVal4'
+      }
+
+      chartIt(); //calling chartIt function
+
+      const buttonSubmit = document.getElementById('submit'); //submits inputted data
+      buttonSubmit.addEventListener('click', async event => { //attaches and event handler to the specified element
+
+        const freetime = document.getElementById('freetime').value; //freetime variable declared using const, returns Element object associated with 'freetime' 
+        const work = document.getElementById('work').value; //work variable declared using const, returns Element object associated with 'work' 
+        const uni = document.getElementById('uni').value; //uni variable declared using const, returns Element object associated with 'uni' 
+        const sleep = document.getElementById('sleep').value; //sleep variable declared using const, returns Element object associated with 'sleep' 
+
+        const data = {freetime,work,uni,sleep}; //data variable is assigned all of the above variables
+        const options = { //options variable declared with the following inside
+          method: 'POST', //POST is used to send data to a server to create or update a resource
+          headers: {
+            'Content-Type': 'application/json' //content type header with incoming data listed as a application/json
+          },
+          body: JSON.stringify(data) //body represents the body of the response/request, when sending data to a web server it must be in a string
+        };
+        const response = await fetch('/api', options); //response variable, await operator is used to wait for a Promise, fetch returning the Promise
+        const json = await response.json(); //json variable, represents response to a request
+
+        chartIt(); //calling chartIt function again
+      });
+
+      async function chartIt() { //asynchronous function operates asynchronously via the event loop, uses a Promise to return its result
+        const response = await fetch('/api'); //response variable, await operator is used to wait for a Promise, fetch returning the Promise
+        const data = await response.json(); //json variable, represents response to a request
+
+        console.log(data); //console logging 'data'
+
+        let xVals = []; //xVals variable and empty array, x representing the x axis
+        let yValsfreetime = []; //yValsfreetime variable and empty array, y representing the y axis
+        let yValsworktime = []; //yValsworktime variable and empty array
+        let yValsunitime = []; //yValsunitime variable and empty array
+        let yValssleeptime = []; //yValssleeptime variable and empty array
+
+        for (let i = 0; i < data.length; i++){ //for loop loops through below block of code
+
+          let  tsdate  = new Date(data[i].timestamp); //tsdate variable gets current time stamp
+          xVals[i] = tsdate.getDate()  + "/" + (tsdate.getMonth()+1) + "/" + tsdate.getFullYear(); //values on the x axis are set in 00/00/0000 date format
+
+          yValsfreetime[i] = data[i].freetime; //yValsfreetime equals data with reference variable freetime
+          yValsworktime[i] = data[i].work; //yValsworktime equals data with reference variable work 
+          yValsunitime[i] = data[i].uni; //yValsuni time equals data with reference variable uni
+          yValssleeptime[i] = data[i].sleep; //yValssleeptime equals data with reference variable sleep
+
+        }
+
+        const ctx = document.getElementById('chart').getContext('2d'); //renders canvas for chart.js chart, code from https://www.chartjs.org/docs/latest/charts/bar.html
+        const myChart = new Chart(ctx, { //variable myChart equals a new Chart
+          type: 'bar', //chart type is a bar chart
+          data: { //data inside curly brackets
+            labels: xVals, //xVals label
+            datasets: [ //four different data sets
+              {
+                label: 'Hours of Free Time', //Hours of Free Time label
+                data: yValsfreetime, //data for yValsfreetime variable
+                fill: false, //fill returns false
+                backgroundColor: 'rgba(252, 186, 3, 0.3)', //label is given yellow colour
+                borderColor: 'rgba(252, 186, 3, 1)', //label border is also yellow
+                borderWidth: 2 //border width of 2
+              },
+              {
+                label: 'Hours of Work', //Hours of Work label
+                data: yValsworktime, //data for yValsworktime variable
+                fill: false, //fill returns false
+                backgroundColor: 'rgba(235, 101, 52, 0.3)', //label is given red colour
+                borderColor: 'rgba(235, 101, 52, 1)', //label border is also red
+                borderWidth: 2 //border width of 2
+              },
+              {
+                label: 'Hours of University', //Hours of University label
+                data: yValsunitime, //data for yValsunitime variable
+                fill: false, //fill returns false
+                backgroundColor: 'rgba(55, 191, 108, 0.3)', //label is given green colour
+                borderColor: 'rgba(55, 191, 108, 1)', //label border is also green
+                borderWidth: 2 //border width of 2
+              },
+              {
+                label: 'Hours of Sleep', //Hours of Sleep label
+                data: yValssleeptime, //data for yValssleeptime variable
+                fill: false, //fill returns false
+                backgroundColor: 'rgba(52, 168, 235, 0.3)', //label is given blue colour
+                borderColor: 'rgba(52, 168, 235, 1)', //label border is also blue
+                borderWidth: 2 //border width of 2
+              }
+
+              ]
+          },
+
+          options: { //holds code for stacked bar chart
+           scales: { // holds code for scales
+            xAxes: [{ //holds code for x axis
+                stacked: true //stacked returns true on x axis
+            }],
+            yAxes: [{ //hold code for y axis
+                stacked: true //stacked returns true on y axis
+            }]
+           }
+          }
+        });
+      }
+    </script> <!-- end of script tag -->
+  </body> <!-- end of body tag -->
+</html> <!-- end of html tag -->
